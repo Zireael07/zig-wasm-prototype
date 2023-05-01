@@ -1,0 +1,1 @@
+zig build-lib game.zig -target wasm32-freestanding -dynamic -O ReleaseFast
