@@ -2,7 +2,9 @@
 
 let console_log_buffer = "";
 let memory = null; //hack for decodeString to work
+let allocUint8 = null;
 
+//based on https://blog.battlefy.com/zig-made-it-easy-to-pass-strings-back-and-forth-with-webassembly
 const decodeString = (pointer, length) => {
     const slice = new Uint8Array(
       memory.buffer,
@@ -11,6 +13,20 @@ const decodeString = (pointer, length) => {
     )
     return new TextDecoder().decode(slice)
   }
+
+const encodeString = (string) => {
+    const buffer = new TextEncoder().encode(string);
+    const pointer = allocUint8(buffer.length + 1); // ask Zig to allocate memory
+    const slice = new Uint8Array(
+      memory.buffer, // memory exported from Zig
+      pointer,
+      buffer.length + 1
+    );
+    slice.set(buffer);
+    slice[buffer.length] = 0; // null byte to null-terminate the string
+    //console.log(pointer);
+    return pointer;
+  };
 
 //those will hold App and its state
 //App is WASM exports which is immutable, hence separate AppState
@@ -31,6 +47,9 @@ window.document.body.onload = function() {
         jsConsoleLogFlush: function () {
             console.log(console_log_buffer);
             console_log_buffer = "";
+        },
+        jsAskForString: function(ptr, len) {
+            return decodeString(ptr, len);
         }
     } };
 
@@ -38,6 +57,7 @@ window.document.body.onload = function() {
 	console.log("Loaded the WASM!");
 	App = result.instance.exports;
     memory = App.memory; //hack
+    allocUint8 = App.allocUint8; //another hack
     console.log(App);
 	AppState.loaded = true;
 	AppState.running = true;
@@ -46,3 +66,11 @@ window.document.body.onload = function() {
     });
 };
 
+document.getElementById("1").onclick = function(){
+    App.update(encodeString("test"))
+}
+
+document.getElementById("2").onclick = function(){
+    
+    App.update(encodeString("other"))
+}
