@@ -22,16 +22,20 @@ let wasm = {
     },
     encodeString: function(string){
         //const memory = this.instance.exports.memory;
-        const buffer = new TextEncoder().encode(string);
+        const bytes = new TextEncoder().encode(string);
         //console.log("len: ", buffer.length);
-        const pointer = this.instance.exports.allocUint8(buffer.length + 1); // ask Zig to allocate memory
-        const slice = new Uint8Array(
+        //this can potentially invalidate the memory buffer
+        const pointer = this.instance.exports.allocUint8(bytes.length + 1); // ask Zig to allocate memory
+        console.log("Pointer hex: ", "0x"+pointer.toString(16)); //since it's a pointer, no negative values are possible
+        //..so we have to always do new/recreate here
+        var buffer_view = new Uint8Array(
           this.instance.exports.memory.buffer, // memory exported from Zig
           pointer,
-          buffer.length + 1
+          bytes.length + 1
         );
-        slice.set(buffer);
-        slice[buffer.length] = 0; // null byte to null-terminate the string
+        buffer_view.set(bytes);
+        buffer_view[bytes.length] = 0; // null byte to null-terminate the string
+        console.log(buffer_view);
         //console.log(pointer);
         return pointer;
     }
@@ -98,14 +102,31 @@ async function bootstrap() {
     //.then(result => {
     if (wasm != null){ 
     console.log("Loaded the WASM!");
-    App = wasm.instance.exports;
+    //App = wasm.instance.exports;
     //memory = App.memory; //hack
     //allocUint8 = App.allocUint8; //another hack
-    console.log(App);
+    console.log(wasm);
     AppState.loaded = true;
     AppState.running = true;
     //App.init();
-    App.main(); // begin
+    wasm.instance.exports.main(); // begin
+
+    document.getElementById("1").onclick = function(){
+        if (wasm != null) {
+            var str = wasm.encodeString("test")
+            console.log(str)
+            wasm.instance.exports.update(str)
+        }
+    }
+    
+    document.getElementById("2").onclick = function(){
+        if (wasm != null){
+            var str = wasm.encodeString("other")
+            console.log(str)
+            wasm.instance.exports.update(str)
+        }
+    }
+
     } //);
 }
 
@@ -114,11 +135,3 @@ window.document.body.onload = function() {
 };
 //bootstrap()
 
-document.getElementById("1").onclick = function(){
-    App.update(wasm.encodeString("test"))
-}
-
-document.getElementById("2").onclick = function(){
-    
-    App.update(wasm.encodeString("other"))
-}
