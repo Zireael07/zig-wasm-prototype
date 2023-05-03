@@ -16,6 +16,7 @@ const decodeString = (pointer, length) => {
 
 const encodeString = (string) => {
     const buffer = new TextEncoder().encode(string);
+    //console.log("len: ", buffer.length);
     const pointer = allocUint8(buffer.length + 1); // ask Zig to allocate memory
     const slice = new Uint8Array(
       memory.buffer, // memory exported from Zig
@@ -41,6 +42,10 @@ var AppState = {
 window.document.body.onload = function() {
     //any JS functions we want to expose to WASM go here
     var env = { env: {
+        _throwError(pointer, length) {
+            const message = decodeString(pointer, length)
+            throw new Error(message)
+        },
         jsConsoleLogWrite: function (ptr, len) {
             console_log_buffer += decodeString(ptr, len);
         },
