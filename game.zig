@@ -33,8 +33,8 @@ pub const Console = struct {
     }
 };
 
-export fn allocUint8(length: u32) [*]const u8 {
-    const slice = allocator.alloc(u8, length) catch
+export fn allocString(length: u32) [*]const u8 {
+    const slice = allocator.allocSentinel(u8, length, 0) catch
         @panic("failed to allocate memory");
     //note: 0 is a valid WASM pointer
     return slice.ptr;
@@ -56,22 +56,10 @@ export fn main() void {
 }
 
 //no string arguments in WASM land :(
-export fn update(
-    message_pointer: [*]const u8,
-    //message_length: u32,
-) void {
-    //_ = message_length;
-    const name_pointer: [*:0]u8 = Imports.jsAskForString(message_pointer);
-    //[*:0] is a 'many-item pointer' so it doesn't have len :(
-    if (name_pointer[0] == @intCast(u8, 0)) {
-        //something went really wrong
-        Console.log("Null pointer!", .{}); //no args
-        allocator.free(std.mem.sliceTo(name_pointer, 0));
-        return;
-    }
-    Console.log("Pointer, {s}", .{name_pointer});
+//instead, accepts a string pointer (linear memory offset)
+export fn update(message_pointer: [*:0]const u8) void {
     //only accepts slices so we need to transform pointer into a slice
-    defer allocator.free(std.mem.sliceTo(name_pointer, 0)); //we need to deallocate on Zig side since we allocated on JS side above
-    const name: []const u8 = std.mem.span(name_pointer); //get Zig-style slice
+    defer allocator.free(std.mem.sliceTo(message_pointer, 0)); //we need to deallocate on Zig side since we allocated on JS side above
+    const name: []const u8 = std.mem.span(message_pointer); //get Zig-style slice
     Console.log("Hi, {s}\n", .{name});
 }

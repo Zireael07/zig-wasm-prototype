@@ -21,28 +21,52 @@ let wasm = {
           return new TextDecoder().decode(slice)
     },
     encodeString: function(string){
-        //const memory = this.instance.exports.memory;
-        const bytes = new TextEncoder().encode(string);
-        //console.log("len: ", buffer.length);
+        const buf = new TextEncoder().encode(string)
+        const len = buf.byteLength
         //this can potentially invalidate the memory buffer
-        const pointer = this.instance.exports.allocUint8(bytes.length + 1); // ask Zig to allocate memory
-        console.log("Pointer hex: ", "0x"+pointer.toString(16)); //since it's a pointer, no negative values are possible
+        const ptr = this.instance.exports.allocString(len) // ask Zig to allocate memory
         //..so we have to always do new/recreate here
-        var buffer_view = new Uint8Array(
-          this.instance.exports.memory.buffer, // memory exported from Zig
-          pointer,
-          bytes.length + 1
-        );
-        buffer_view.set(bytes);
-        buffer_view[bytes.length] = 0; // null byte to null-terminate the string
-        console.log(buffer_view);
-        //console.log(pointer);
-        return pointer;
+        const view = this.getMemory()
+        view.subarray(ptr, ptr + len).set(buf)
+
+        return ptr
+        
+        // //const memory = this.instance.exports.memory;
+        // const bytes = new TextEncoder().encode(string);
+        // //console.log("len: ", buffer.length);
+        // //this can potentially invalidate the memory buffer
+        // const pointer = this.instance.exports.allocUint8(bytes.length + 1); // ask Zig to allocate memory
+        // console.log("Pointer hex: ", "0x"+pointer.toString(16)); //since it's a pointer, no negative values are possible
+
+        // var buffer_view = new Uint8Array(
+        //   this.instance.exports.memory.buffer, // memory exported from Zig
+        //   pointer,
+        //   bytes.length + 1
+        // );
+        // buffer_view.set(bytes);
+        // buffer_view[bytes.length] = 0; // null byte to null-terminate the string
+        // console.log(buffer_view);
+        // //console.log(pointer);
+        // return pointer;
+    },
+    getMemory: function () {
+        const memory = this.instance.exports.memory
+        if (
+            this.wasmMemory === undefined ||
+            this.wasmMemory !== memory.buffer
+        ) {
+            this.wasmMemory = new Uint8Array(memory.buffer)
+        }
+        return this.wasmMemory
     }
 }
 
 //any JS functions we want to expose to WASM go here
 var envObject = { env: {
+    //initialize memory here
+    memoryBase: 0,
+    tableBase: 0,
+    memory: new WebAssembly.Memory({ initial: 512 }),
     _throwError(pointer, length) {
         const message = wasm.decodeString(pointer, length)
         throw new Error(message)
