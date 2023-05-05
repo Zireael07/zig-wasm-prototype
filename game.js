@@ -41,6 +41,22 @@ let wasm = {
             this.wasmMemory = new Uint8Array(memory.buffer)
         }
         return this.wasmMemory
+    },
+    encodeBytes: function(){
+        var input = new Uint8Array([1, 2, 3, 4, 5]);
+        const length = input.byteLength;
+        var bytes = new Uint8Array(length+1);
+        // make the first entry encode length
+        bytes[0] = length;
+        bytes.set(input, 1);
+        console.log(bytes);
+        const ptr = this.instance.exports.alloc(length+1); //ask Zig to allocate
+
+        const view = this.getMemory()
+        view.subarray(ptr, ptr + length+1).set(bytes) //begin is inclusive, end is exclusive
+        //this.u8a(ptr + this.LENGTH_WIDTH, length).set(bytes);
+        console.log("Pointer hex: ", "0x"+ptr.toString(16)); //since it's a pointer, no negative values are possible
+        return ptr;
     }
 }
 
@@ -96,6 +112,9 @@ async function bootstrap() {
             var str = wasm.encodeString("test")
             console.log(str)
             wasm.instance.exports.update(str)
+            //test
+            var arr_ptr = wasm.encodeBytes();
+            wasm.instance.exports.sumArray(arr_ptr)
         }
     }
     
