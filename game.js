@@ -21,33 +21,16 @@ let wasm = {
           return new TextDecoder().decode(slice)
     },
     encodeString: function(string){
-        const buf = new TextEncoder().encode(string)
-        const len = buf.byteLength
+        const bytes = new TextEncoder().encode(string)
+        const len = bytes.byteLength
         //this can potentially invalidate the memory buffer
         const ptr = this.instance.exports.allocString(len) // ask Zig to allocate memory
+        // console.log("Pointer hex: ", "0x"+ptr.toString(16)); //since it's a pointer, no negative values are possible
         //..so we have to always do new/recreate here
         const view = this.getMemory()
-        view.subarray(ptr, ptr + len).set(buf)
+        view.subarray(ptr, ptr + len).set(bytes)
 
         return ptr
-        
-        // //const memory = this.instance.exports.memory;
-        // const bytes = new TextEncoder().encode(string);
-        // //console.log("len: ", buffer.length);
-        // //this can potentially invalidate the memory buffer
-        // const pointer = this.instance.exports.allocUint8(bytes.length + 1); // ask Zig to allocate memory
-        // console.log("Pointer hex: ", "0x"+pointer.toString(16)); //since it's a pointer, no negative values are possible
-
-        // var buffer_view = new Uint8Array(
-        //   this.instance.exports.memory.buffer, // memory exported from Zig
-        //   pointer,
-        //   bytes.length + 1
-        // );
-        // buffer_view.set(bytes);
-        // buffer_view[bytes.length] = 0; // null byte to null-terminate the string
-        // console.log(buffer_view);
-        // //console.log(pointer);
-        // return pointer;
     },
     getMemory: function () {
         const memory = this.instance.exports.memory
@@ -83,31 +66,6 @@ var envObject = { env: {
     }
 } };
 
-//based on https://blog.battlefy.com/zig-made-it-easy-to-pass-strings-back-and-forth-with-webassembly
-// const decodeString = (pointer, length) => {
-//     const slice = new Uint8Array(
-//       memory.buffer,
-//       pointer,
-//       length
-//     )
-//     return new TextDecoder().decode(slice)
-//   }
-
-// const encodeString = (string) => {
-//     const buffer = new TextEncoder().encode(string);
-//     //console.log("len: ", buffer.length);
-//     const pointer = allocUint8(buffer.length + 1); // ask Zig to allocate memory
-//     const slice = new Uint8Array(
-//       memory.buffer, // memory exported from Zig
-//       pointer,
-//       buffer.length + 1
-//     );
-//     slice.set(buffer);
-//     slice[buffer.length] = 0; // null byte to null-terminate the string
-//     //console.log(pointer);
-//     return pointer;
-//   };
-
 //those will hold App and its state
 //App is WASM exports which is immutable, hence separate AppState
 var App = {
@@ -127,8 +85,6 @@ async function bootstrap() {
     if (wasm != null){ 
     console.log("Loaded the WASM!");
     //App = wasm.instance.exports;
-    //memory = App.memory; //hack
-    //allocUint8 = App.allocUint8; //another hack
     console.log(wasm);
     AppState.loaded = true;
     AppState.running = true;
@@ -157,5 +113,4 @@ async function bootstrap() {
 window.document.body.onload = function() {
    bootstrap()
 };
-//bootstrap()
 
