@@ -4,20 +4,35 @@
     <title>Game Demo</title>
     <style>
       body {
-	  background-color: black;
+	  background-color: gray;
 	  color: white;
 	  width: 95%;
       }
-      /* #cnvdiv {
-	  width: 300px;
-	  margin: 0 auto;
-      } */
+      textarea {
+        background-color: black;
+        color: white;
+        width: 600px;
+        height: 350px;
+        font-size: 16px; /*supposedly a minimum for mobile */
+      }
+      
+      iframe {
+          width: 400px;
+          height: 350px
+      }
+    </style>
     </style>
   </head>
   <body>
-   <p>This is some text</p>
+   <div>
+    <p>Enter text here</p>
+   <p><textarea style="float:left" id="scriptTextarea"></textarea></p>
+   <button style="clear:both" id="send">Send!</button>
+  </div>
+  <div style="clear:both">
    <button id="1">1: Test</button>
    <button id="2">2: Other</button>
+  </div>
   </body>
   <script src="game.js"></script>
 </html>

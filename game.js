@@ -107,6 +107,12 @@ async function bootstrap() {
     //App.init();
     wasm.instance.exports.main(); // begin
 
+    document.getElementById("send").onclick = function() {
+        var input = document.getElementById("scriptTextarea").value;
+        var str = wasm.encodeString(input)
+        wasm.instance.exports.update(str);
+    }
+
     document.getElementById("1").onclick = function(){
         if (wasm != null) {
             var str = wasm.encodeString("test")
