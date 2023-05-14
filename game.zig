@@ -89,3 +89,10 @@ fn _sumArray(array: []const u8) u8 {
 
     return total;
 }
+
+export fn parse(message_pointer: [*:0]const u8) void {
+    //only accepts slices so we need to transform pointer into a slice
+    defer allocator.free(std.mem.sliceTo(message_pointer, 0)); //we need to deallocate on Zig side since we allocated on JS side above
+    const script_payload: []const u8 = std.mem.span(message_pointer); //get Zig-style slice
+    Console.log("Script: {s}\n", .{script_payload});
+}

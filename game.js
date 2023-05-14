@@ -110,27 +110,27 @@ async function bootstrap() {
     document.getElementById("send").onclick = function() {
         var input = document.getElementById("scriptTextarea").value;
         var str = wasm.encodeString(input)
-        wasm.instance.exports.update(str);
+        wasm.instance.exports.parse(str);
     }
 
-    document.getElementById("1").onclick = function(){
-        if (wasm != null) {
-            var str = wasm.encodeString("test")
-            console.log(str)
-            wasm.instance.exports.update(str)
-            //test
-            var arr_ptr = wasm.encodeBytes();
-            wasm.instance.exports.sumArray(arr_ptr)
-        }
-    }
+    // document.getElementById("1").onclick = function(){
+    //     if (wasm != null) {
+    //         var str = wasm.encodeString("test")
+    //         console.log(str)
+    //         wasm.instance.exports.update(str)
+    //         //test
+    //         var arr_ptr = wasm.encodeBytes();
+    //         wasm.instance.exports.sumArray(arr_ptr)
+    //     }
+    // }
     
-    document.getElementById("2").onclick = function(){
-        if (wasm != null){
-            var str = wasm.encodeString("other")
-            console.log(str)
-            wasm.instance.exports.update(str)
-        }
-    }
+    // document.getElementById("2").onclick = function(){
+    //     if (wasm != null){
+    //         var str = wasm.encodeString("other")
+    //         console.log(str)
+    //         wasm.instance.exports.update(str)
+    //     }
+    // }
 
     } //);
 }
